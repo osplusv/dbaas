@@ -20,6 +20,13 @@ type databaseService struct {
 
 var ErrInvalidArgument = errors.New("invalid argument")
 
+func NewDatabaseService(container container.Repository, database database.Repository) DatabaseProvisioner {
+	return &databaseService{
+		container: container,
+		database:  database,
+	}
+}
+
 func (s *databaseService) ProvisionNewDatabase(id string, specification database.DatabaseSpecification) (*database.Database, error) {
 	if id == "" {
 		return nil, ErrInvalidArgument
