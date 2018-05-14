@@ -80,3 +80,21 @@ func (r *DatabaseHandler) ListDatabases(c echo.Context) error {
 	resp := listDatabasesResponse{Databases: dbResp}
 	return respondWithPayload(http.StatusOK, resp, c)
 }
+
+func (r *DatabaseHandler) UnprovisionDatabase(c echo.Context) error {
+	databaseIDParam := strings.Trim(c.Param("databaseid"), " ")
+	if len(databaseIDParam) == 0 {
+		return respondWithError(http.StatusBadRequest, errors.New("invalid databaseid").Error(), c)
+	}
+
+	userIDParam := strings.Trim(c.Param("userid"), " ")
+	if len(userIDParam) == 0 {
+		return respondWithError(http.StatusBadRequest, errors.New("invalid userid").Error(), c)
+	}
+
+	if err := r.service.UnprovisionDatabase(userIDParam, databaseIDParam); err != nil {
+		return respondWithError(http.StatusInternalServerError, err.Error(), c)
+	}
+
+	return responseNoContent(http.StatusNoContent, c)
+}
