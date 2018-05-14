@@ -40,3 +40,11 @@ func respondWithPayload(httpStatus int, payload interface{}, c echo.Context) err
 func responseNoContent(httpStatus int, c echo.Context) error {
 	return c.NoContent(httpStatus)
 }
+
+func isDatabaseAvailable(database string) bool {
+	switch database {
+	case "mysql", "mariadb":
+		return true
+	}
+	return false
+}
