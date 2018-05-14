@@ -55,3 +55,18 @@ func (s *databaseService) ProvisionNewDatabase(id string, specification database
 	s.database.Store(database)
 	return database, err
 }
+
+func (s *databaseService) ProvisionedDatabases(id string) ([]*database.Database, error) {
+	if id == "" {
+		return nil, ErrInvalidArgument
+	}
+
+	databases := make([]*database.Database, 0)
+	for _, d := range s.database.FindAll() {
+		if d.UserID == id {
+			databases = append(databases, d)
+		}
+	}
+
+	return databases, nil
+}
