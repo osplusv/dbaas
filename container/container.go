@@ -41,6 +41,19 @@ func NewDatabaseContainer(specifications ContainerSpecification) (*DatabaseConta
 	return container, nil
 }
 
+func (c *DatabaseContainer) StartContainer() error {
+	d, err := docker.New()
+	if err != nil {
+		return err
+	}
+
+	if err := d.StartContainer(c.ContainerID); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (c *DatabaseContainer) CreateNewDatabase() (*database.Database, error) {
 	d, err := docker.New()
 	if err != nil {
