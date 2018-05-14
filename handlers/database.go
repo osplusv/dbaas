@@ -24,6 +24,12 @@ type (
 	}
 )
 
+type (
+	listDatabasesResponse struct {
+		Databases []*databaseResponse `json:"databases"`
+	}
+)
+
 type databaseResponse struct {
 	ID               string `json:"id"`
 	Type             string `json:"type"`
@@ -52,4 +58,25 @@ func (r *DatabaseHandler) ProvisionNewDatabase(c echo.Context) error {
 
 	resp := &provisionDatabaseResponse{Database: databaseResponse{ID: database.ID, Type: request.DatabaseType, ConnectionString: database.ConnectionString}}
 	return respondWithPayload(http.StatusCreated, resp, c)
+}
+
+func (r *DatabaseHandler) ListDatabases(c echo.Context) error {
+	userIDParam := strings.Trim(c.Param("userid"), " ")
+	if len(userIDParam) == 0 {
+		return respondWithError(http.StatusBadRequest, errors.New("invalid userid").Error(), c)
+	}
+
+	databases, err := r.service.ProvisionedDatabases(userIDParam)
+	if err != nil {
+		return respondWithError(http.StatusInternalServerError, err.Error(), c)
+	}
+
+	dbResp := make([]*databaseResponse, 0, len(databases))
+	for _, val := range databases {
+		tmp := &databaseResponse{ID: val.ID, Type: val.Type, ConnectionString: val.ConnectionString}
+		dbResp = append(dbResp, tmp)
+	}
+
+	resp := listDatabasesResponse{Databases: dbResp}
+	return respondWithPayload(http.StatusOK, resp, c)
 }
