@@ -70,3 +70,30 @@ func (s *databaseService) ProvisionedDatabases(id string) ([]*database.Database,
 
 	return databases, nil
 }
+
+func (s *databaseService) UnprovisionDatabase(userID string, databaseID string) error {
+	if userID == "" || databaseID == "" {
+		return ErrInvalidArgument
+	}
+
+	database, err := s.database.Find(databaseID)
+	if err != nil {
+		return err
+	}
+
+	if database.UserID != userID {
+		return errors.New("No database found for user " + string(userID))
+	}
+
+	container, err := s.container.Find(database.ContainerID)
+	if err != nil {
+		return errors.New("Error trying to delete database for user " + string(userID))
+	}
+
+	if err := container.DeleteDatabase(database); err != nil {
+		return err
+	}
+	s.database.Delete(database.ID)
+
+	return nil
+}
