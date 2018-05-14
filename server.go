@@ -1,10 +1,17 @@
 package main
 
-import "os"
+import (
+	"os"
+
+	"github.com/osplusv/dbaas/api"
+)
 
 func main() {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "1323"
+	serverPort := os.Getenv("PORT")
+	if serverPort == "" {
+		serverPort = "1323"
 	}
+
+	server := api.NewServer()
+	server.Logger.Fatal(server.Start(":" + serverPort))
 }
