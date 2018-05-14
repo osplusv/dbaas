@@ -2,9 +2,11 @@ package container
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 
+	"github.com/osplusv/dbaas/database"
 	"github.com/osplusv/dbaas/docker"
 	"github.com/osplusv/dbaas/util"
 	"github.com/pborman/uuid"
@@ -37,6 +39,39 @@ func NewDatabaseContainer(specifications ContainerSpecification) (*DatabaseConta
 		return nil, err
 	}
 	return container, nil
+}
+
+func (c *DatabaseContainer) CreateNewDatabase() (*database.Database, error) {
+	d, err := docker.New()
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println("Creating database")
+
+	dbName := strings.Split(strings.ToUpper(uuid.New()), "-")[0]
+	user := strings.Split(strings.ToUpper(uuid.New()), "-")[0]
+	pwd := strings.Split(strings.ToUpper(uuid.New()), "-")[0]
+
+	cmd := []string{
+		"/bin/bash",
+		"-c",
+		"mysql -u " + c.EnvCredential.Username + " -p" + c.EnvCredential.Password + " -e \"CREATE DATABASE " + dbName + ";CREATE USER '" + user + "'@'%' IDENTIFIED BY '" + pwd + "';GRANT ALL ON " + dbName + ".* TO '" + user + "'@'%';FLUSH PRIVILEGES;\"",
+	}
+	fmt.Println(cmd[2])
+	if err := d.ExecCommand(c.ContainerID, cmd); err != nil {
+		return nil, err
+	}
+
+	c.DatabaseServices++
+
+	return &database.Database{
+		ID:               strings.Split(strings.ToUpper(uuid.New()), "-")[0],
+		Type:             c.Image,
+		Name:             dbName,
+		ContainerID:      c.ContainerID,
+		EnvCredential:    util.Credential{Username: user, Password: pwd},
+		ConnectionString: c.Image + "://" + user + ":" + pwd + "@" + "localhost:" + c.HostPort + "/" + dbName,
+	}, nil
 }
 
 func allocateNewContainer(image string) (*DatabaseContainer, error) {
