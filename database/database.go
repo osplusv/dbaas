@@ -1,5 +1,11 @@
 package database
 
+import (
+	"errors"
+
+	"github.com/osplusv/dbaas/util"
+)
+
 type (
 	Database struct {
 		ID               string
