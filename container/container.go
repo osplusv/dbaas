@@ -74,6 +74,28 @@ func (c *DatabaseContainer) CreateNewDatabase() (*database.Database, error) {
 	}, nil
 }
 
+func (c *DatabaseContainer) DeleteDatabase(database *database.Database) error {
+	d, err := docker.New()
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("Deleting database")
+	cmd := []string{
+		"/bin/bash",
+		"-c",
+		"mysql -u " + c.EnvCredential.Username + " -p" + c.EnvCredential.Password + " -e \"DROP DATABASE " + database.Name + ";DROP USER '" + string(database.EnvCredential.Username) + "'@'%';\"",
+	}
+	fmt.Println(cmd[2])
+	if err := d.ExecCommand(c.ContainerID, cmd); err != nil {
+		return err
+	}
+
+	c.DatabaseServices--
+
+	return nil
+}
+
 func allocateNewContainer(image string) (*DatabaseContainer, error) {
 	d, err := docker.New()
 	if err != nil {
