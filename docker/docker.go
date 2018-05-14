@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/docker/docker/api/types"
@@ -32,20 +33,22 @@ func (d *Docker) ImagePull(image string) error {
 		return err
 	}
 	defer out.Close()
-	fmt.Println("Done")
 
 	io.Copy(os.Stdout, out)
 	return nil
 }
 
 func (d *Docker) ImageIsLoaded(image string) (bool, error) {
-	result, err := d.Client.ImageSearch(context.Background(), image, types.ImageSearchOptions{Limit: 1})
+	result, err := d.Client.ImageList(context.Background(), types.ImageListOptions{})
 	if err != nil {
-		return false, err
+		return false, nil
 	}
-
-	if len(result) != 0 {
-		return true, nil
+	for _, val := range result {
+		for _, repo := range val.RepoTags {
+			if strings.Contains(repo, image) {
+				return true, nil
+			}
+		}
 	}
 	return false, nil
 }
